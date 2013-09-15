@@ -1,0 +1,31 @@
+# -*- mode: python -*-
+
+from twisted.application import service
+from twisted.words.protocols.jabber import jid
+from wokkel.client import XMPPClient
+
+import issuebot
+
+# Configuration
+# Change these values
+jabber_id = 'user@example.com'		# Jabber-ID
+password  = 'password'				# Password
+room      = 'room@chat.example.com'	# Room (including server)
+bot_name  = 'Issuebot'				# Display name for bot
+room_pass = None					# Set this to the room password, if any, or leave it as None
+repo      = 'octocat/Spoon-Knife'	# Set this to your repository, in the format user/repository
+
+# That's it, you're all set.
+
+application = service.Application('issuebot')
+
+
+client = XMPPClient(jid.internJID(jabber_id), password)
+
+bot = issuebot.IssueBot(room, bot_name, None)
+bot.setHandlerParent(client)
+
+client.setServiceParent(application)
+
+# issuebot.main(repo, bot)
+# This does not work. But how should I do it then?
