@@ -151,6 +151,7 @@ def processApiResult(element, repo):
 def Initialize(repos, bot):
     # Initialize database with current data
     for repo in repos:
+        issues[repo] = {}
         _, lst_open = pullApi(repo)
         rlimit, lst_closed = pullApi(repo, 'closed')
         updateMeta(rlimit)
