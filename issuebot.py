@@ -48,9 +48,13 @@ class IssueBot(XMPPHandler):
         self.send(msg)
 
 
-def pullApi(repo, state='open'):
+def pullApi(repo, oauthtoken=None, state='open'):
     # Poll the API and return the JSON-Data and the X-RateLimit-Remaining.
     url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
+    opener = urllib2.build_opener()
+    if oauthtoken:
+        opener.addheaders([("Authorization", "token %s" % (oauthtoken))])
+    opener.addheaders([("User-agent", "malexmave/Issuebot")])
     response = urllib2.urlopen(url)
     if response.info().getheader('Status') == '200 OK':
         return response.info().getheader('X-RateLimit-Remaining'),  json.load(response)
@@ -148,12 +152,12 @@ def processApiResult(element, repo):
     return retval
 
 
-def Initialize(repos, bot):
+def Initialize(repos, bot, oauth):
     # Initialize database with current data
     for repo in repos:
         issues[repo] = {}
-        _, lst_open = pullApi(repo)
-        rlimit, lst_closed = pullApi(repo, 'closed')
+        _, lst_open = pullApi(repo, oauthtoken=oauth)
+        rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
         updateMeta(rlimit)
         for element in itertools.chain(lst_open, lst_closed):
             processApiResult(element, repo)
@@ -161,10 +165,10 @@ def Initialize(repos, bot):
 
 def loop(pTuple):
     # Poll API and notify the MUC of any changes.
-    repos, bot = pTuple
+    repos, bot, oauth = pTuple
     for repo in repos:
-        _, lst_open = pullApi(repo)
-        rlimit, lst_closed = pullApi(repo, 'closed')
+        _, lst_open = pullApi(repo, oauthtoken=oauth)
+        rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
         updateMeta(rlimit)
         messages = []
         for element in itertools.chain(lst_open, lst_closed):
