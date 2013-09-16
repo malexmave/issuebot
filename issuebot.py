@@ -53,7 +53,7 @@ def pullApi(repo, oauthtoken=None, state='open'):
     url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
     opener = urllib2.build_opener()
     if oauthtoken:
-        opener.addheaders([("Authorization", "token %s" % (oauthtoken))])
+        opener.addheaders([("Authorization", "token " + oauthtoken)])
     opener.addheaders([("User-agent", "malexmave/Issuebot")])
     response = urllib2.urlopen(url)
     if response.info().getheader('Status') == '200 OK':
