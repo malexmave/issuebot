@@ -62,7 +62,7 @@ def pullApi(repo, oauthtoken=None, state='open'):
         print "[ERR ] Response Code != 200 OK, something's wrong."
 
 
-def updateMeta(rlimit, bot):
+def updateMeta(rlimit):
     # Update the remaining Ratelimit information, warn if we approach zero.
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
@@ -159,7 +159,7 @@ def Initialize(repos, bot, oauth):
         issues[repo] = {}
         _, lst_open = pullApi(repo, oauthtoken=oauth)
         rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
-        updateMeta(rlimit, bot)
+        updateMeta(rlimit)
         for element in itertools.chain(lst_open, lst_closed):
             processApiResult(element, repo)
 
@@ -170,7 +170,7 @@ def loop(pTuple):
     for repo in repos:
         _, lst_open = pullApi(repo, oauthtoken=oauth)
         rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
-        updateMeta(rlimit, bot)
+        updateMeta(rlimit)
         messages = []
         for element in itertools.chain(lst_open, lst_closed):
             messages.extend(processApiResult(element, repo))
