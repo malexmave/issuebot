@@ -37,3 +37,15 @@ Then launch it with `twistd`.
     twistd -y issuebot.tac
 
 If everything worked fine, a new user should have joined your MUC.
+
+## Experts
+
+If you want a high update frequency or monitor a high number of repositories,
+please consider adding an OAuth key to increase your API limit from 60 / hour
+to 5000 / hour. Set the token into the respective variable in the tac-file.
+
+Instructions on how to obtain such a token can be found on the 
+[GitHub developer site](https://developer.github.com/guides/getting-started/#authentication)
+(look for the section on OAuth and follow the instructions, pasting the generated 
+token into the variable as a String). This is entirely optional, but please note 
+that GitHub may be angry if you exceed your Rate Limit, and the bot may crash.
