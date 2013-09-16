@@ -155,7 +155,7 @@ def Initialize(repos, bot):
         rlimit, lst_closed = pullApi(repo, 'closed')
         updateMeta(rlimit)
         for element in itertools.chain(lst_open, lst_closed):
-            processApiResult(element)
+            processApiResult(element, repo)
 
 
 def loop(pTuple):
