@@ -62,11 +62,13 @@ def pullApi(repo, oauthtoken=None, state='open'):
         print "[ERR ] Response Code != 200 OK, something's wrong."
 
 
-def updateMeta(rlimit):
+def updateMeta(rlimit, bot):
     # Update the remaining Ratelimit information, warn if we approach zero.
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
         print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
+    bot.notify("Rate Limit remaining: %i" % (rlimit))
+
 
 
 def parseTime(timestring):
@@ -169,7 +171,7 @@ def loop(pTuple):
     for repo in repos:
         _, lst_open = pullApi(repo, oauthtoken=oauth)
         rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
-        updateMeta(rlimit)
+        updateMeta(rlimit, bot)
         messages = []
         for element in itertools.chain(lst_open, lst_closed):
             messages.extend(processApiResult(element, repo))
