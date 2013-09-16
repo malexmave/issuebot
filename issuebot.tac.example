@@ -3,6 +3,7 @@
 from twisted.application import service
 from twisted.words.protocols.jabber import jid
 from wokkel.client import XMPPClient
+from twisted.internet.task import LoopingCall
 
 import issuebot
 
@@ -27,5 +28,6 @@ bot.setHandlerParent(client)
 
 client.setServiceParent(application)
 
-# issuebot.main(repo, bot)
-# This does not work. But how should I do it then?
+issuebot.Initialize(repo, bot)
+lc = LoopingCall(issuebot.loop, (repo, bot))
+lc.start(60)

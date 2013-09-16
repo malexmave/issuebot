@@ -34,6 +34,7 @@ class IssueBot(XMPPHandler):
             x.addElement('password', content = self.password)
         self.send(pres)
         self.notify("test...1")
+        
 
     def notify(self, msgt):
         # build the messages
@@ -158,21 +159,22 @@ def processApiResult(element):
     return retval
 
 
-def main(repo, bot):
+def Initialize(repo, bot):
     # Initialize database with current data
+    bot.notify("test123....s")
     _, lst_open = pullApi(repo)
     rlimit, lst_closed = pullApi(repo, 'closed')
     updateMeta(rlimit)
     for element in itertools.chain(lst_open, lst_closed):
         processApiResult(element)
-    # Database is set up. Now loop
-    while(True):
-        time.sleep(60)
-        _, lst_open = pullApi(repo)
-        rlimit, lst_closed = pullApi(repo, 'closed')
-        updateMeta(rlimit)
-        messages = []
-        for element in itertools.chain(lst_open, lst_closed):
-            messages.extend(processApiResult(element))
-        for element in messages:
-            bot.notify(element)
+
+def loop(pTuple):
+    repo, bot = pTuple
+    _, lst_open = pullApi(repo)
+    rlimit, lst_closed = pullApi(repo, 'closed')
+    updateMeta(rlimit)
+    messages = []
+    for element in itertools.chain(lst_open, lst_closed):
+        messages.extend(processApiResult(element))
+    for element in messages:
+        bot.notify(element)
