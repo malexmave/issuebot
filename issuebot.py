@@ -21,6 +21,7 @@ class IssueBot(XMPPHandler):
         self.nick = nick
         self.password = password
 
+
     def connectionMade(self):
         self.send(AvailablePresence())
 
@@ -33,7 +34,6 @@ class IssueBot(XMPPHandler):
         if not self.password is None:
             x.addElement('password', content = self.password)
         self.send(pres)
-        self.notify("test...1")
         
 
     def notify(self, msgt):
@@ -64,6 +64,7 @@ class IssueBot(XMPPHandler):
         body.addRawXml(''.join(html))
 
         self.send(msg)
+
 
 def pullApi(repo, state='open'):
     url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
@@ -161,12 +162,12 @@ def processApiResult(element):
 
 def Initialize(repo, bot):
     # Initialize database with current data
-    bot.notify("test123....s")
     _, lst_open = pullApi(repo)
     rlimit, lst_closed = pullApi(repo, 'closed')
     updateMeta(rlimit)
     for element in itertools.chain(lst_open, lst_closed):
         processApiResult(element)
+
 
 def loop(pTuple):
     repo, bot = pTuple
