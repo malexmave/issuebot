@@ -169,6 +169,7 @@ def loop(pTuple):
         messages = []
         for element in itertools.chain(lst_open, lst_closed):
             messages.extend(processApiResult(element, repo))
-        for element in messages:
+        if messages != []:
             bot.notify("Updates in repository %s:" % (repo))
+        for element in messages:
             bot.notify(element)
