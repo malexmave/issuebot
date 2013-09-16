@@ -21,11 +21,9 @@ class IssueBot(XMPPHandler):
         self.nick = nick
         self.password = password
 
+
     def connectionMade(self):
         self.send(AvailablePresence())
-
-        # add handlers
-
         # join room
         pres = Presence()
         pres['to'] = self.room + '/' + self.nick
@@ -33,27 +31,12 @@ class IssueBot(XMPPHandler):
         if not self.password is None:
             x.addElement('password', content = self.password)
         self.send(pres)
-        self.notify("test...1")
+        
 
     def notify(self, msgt):
         # build the messages
         text = [msgt]
         html = [msgt]
-        # link = r"<a href='%s' name='%s'>%s</a>"
-        
-        # text.append('New commits in %s:\n' % data['repository']['url'])
-        # html.append("New commits in " \
-        #                 "<a href='%s'>%s</a>:<br/>" % \
-        #                 (data['repository']['url'],
-        #                  data['repository']['name']))
-        # for c in data['commits']:
-        #     text.append('%s | %s | %s\n' % (c['message'],
-        #                                     c['author']['email'], 
-        #                                     c['url']))
-        #     ltxt = link % (c['url'], c['id'], c['id'][:7])
-        #     html.append('%s | %s | %s<br />' % (c['message'],
-        #                                         c['author']['email'],
-        #                                         ltxt))
         msg = domish.Element((None, 'message'))
         msg['to'] = self.room
         msg['type'] = 'groupchat'
@@ -61,10 +44,12 @@ class IssueBot(XMPPHandler):
         wrap = msg.addElement((NS_XHTML_IM, 'html'))
         body = wrap.addElement((NS_XHTML_W3C, 'body'))
         body.addRawXml(''.join(html))
-
+        # Send message
         self.send(msg)
 
+
 def pullApi(repo, state='open'):
+    # Poll the API and return the JSON-Data and the X-RateLimit-Remaining.
     url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
     response = urllib2.urlopen(url)
     if response.info().getheader('Status') == '200 OK':
@@ -74,17 +59,20 @@ def pullApi(repo, state='open'):
 
 
 def updateMeta(rlimit):
+    # Update the remaining Ratelimit information, warn if we approach zero.
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
-        print "[WARN] Low Remaining Rate Limit - %i" % (rlimit)
+        print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
 
 
 def parseTime(timestring):
+    # Convert GitHub-API timestring to UNIX epoch
     tobj = time.strptime(timestring, "%Y-%m-%dT%H:%M:%SZ")
     return time.strftime("%s", tobj)
 
 
 def newIssueFound(dct):
+    # Add a new issue to the database and generate a notification
     tstamp = parseTime(dct['updated_at']) # As UNIX timestamp (epoch)
     issue_no = dct['number']
     issues[issue_no]['title'] = dct['title']
@@ -102,6 +90,7 @@ def newIssueFound(dct):
 
 
 def findIssueDelta(dct):
+    # Find changes between two versions of an Issue, generating a notification message
     retval = []
     issue_no = dct['number']
     if issues[issue_no]['title'] != dct['title']:
@@ -138,6 +127,7 @@ def findIssueDelta(dct):
 
 
 def processApiResult(element):
+    # Process the API results, creating notification messages
     retval = ""
     new = True
     dct = dict(element)
@@ -158,21 +148,23 @@ def processApiResult(element):
     return retval
 
 
-def main(repo, bot):
+def Initialize(repo, bot):
     # Initialize database with current data
     _, lst_open = pullApi(repo)
     rlimit, lst_closed = pullApi(repo, 'closed')
     updateMeta(rlimit)
     for element in itertools.chain(lst_open, lst_closed):
         processApiResult(element)
-    # Database is set up. Now loop
-    while(True):
-        time.sleep(60)
-        _, lst_open = pullApi(repo)
-        rlimit, lst_closed = pullApi(repo, 'closed')
-        updateMeta(rlimit)
-        messages = []
-        for element in itertools.chain(lst_open, lst_closed):
-            messages.extend(processApiResult(element))
-        for element in messages:
-            bot.notify(element)
+
+
+def loop(pTuple):
+    # Poll API and notify the MUC of any changes.
+    repo, bot = pTuple
+    _, lst_open = pullApi(repo)
+    rlimit, lst_closed = pullApi(repo, 'closed')
+    updateMeta(rlimit)
+    messages = []
+    for element in itertools.chain(lst_open, lst_closed):
+        messages.extend(processApiResult(element))
+    for element in messages:
+        bot.notify(element)
