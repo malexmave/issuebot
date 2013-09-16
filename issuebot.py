@@ -24,9 +24,6 @@ class IssueBot(XMPPHandler):
 
     def connectionMade(self):
         self.send(AvailablePresence())
-
-        # add handlers
-
         # join room
         pres = Presence()
         pres['to'] = self.room + '/' + self.nick
@@ -40,21 +37,6 @@ class IssueBot(XMPPHandler):
         # build the messages
         text = [msgt]
         html = [msgt]
-        # link = r"<a href='%s' name='%s'>%s</a>"
-        
-        # text.append('New commits in %s:\n' % data['repository']['url'])
-        # html.append("New commits in " \
-        #                 "<a href='%s'>%s</a>:<br/>" % \
-        #                 (data['repository']['url'],
-        #                  data['repository']['name']))
-        # for c in data['commits']:
-        #     text.append('%s | %s | %s\n' % (c['message'],
-        #                                     c['author']['email'], 
-        #                                     c['url']))
-        #     ltxt = link % (c['url'], c['id'], c['id'][:7])
-        #     html.append('%s | %s | %s<br />' % (c['message'],
-        #                                         c['author']['email'],
-        #                                         ltxt))
         msg = domish.Element((None, 'message'))
         msg['to'] = self.room
         msg['type'] = 'groupchat'
@@ -62,7 +44,7 @@ class IssueBot(XMPPHandler):
         wrap = msg.addElement((NS_XHTML_IM, 'html'))
         body = wrap.addElement((NS_XHTML_W3C, 'body'))
         body.addRawXml(''.join(html))
-
+        # Send message
         self.send(msg)
 
 
@@ -78,7 +60,7 @@ def pullApi(repo, state='open'):
 def updateMeta(rlimit):
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
-        print "[WARN] Low Remaining Rate Limit - %i" % (rlimit)
+        print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
 
 
 def parseTime(timestring):
