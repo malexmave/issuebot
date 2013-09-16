@@ -19,8 +19,9 @@ room      = 'room@chat.example.com'
 bot_name  = 'Issuebot'
 # Room Password (leave as None for no password)
 room_pass = None
-# Repository, in format 'username/repo'
-repo      = 'octocat/Spoon-Knife'
+# Repository, in format ['username/repo', 'username/repo2', ...]
+# If you need only one repository, please format it as a [list] anyway.
+repos     = ['octocat/Spoon-Knife', 'octocat/Hello-World']
 # -- That's it, you're all set.
 
 application = service.Application('issuebot')
@@ -33,6 +34,6 @@ bot.setHandlerParent(client)
 
 client.setServiceParent(application)
 
-issuebot.Initialize(repo, bot)
-lc = LoopingCall(issuebot.loop, (repo, bot))
+issuebot.Initialize(repos, bot)
+lc = LoopingCall(issuebot.loop, (repos, bot))
 lc.start(60)

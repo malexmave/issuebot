@@ -71,100 +71,103 @@ def parseTime(timestring):
     return time.strftime("%s", tobj)
 
 
-def newIssueFound(dct):
+def newIssueFound(dct, repo):
     # Add a new issue to the database and generate a notification
     tstamp = parseTime(dct['updated_at']) # As UNIX timestamp (epoch)
     issue_no = dct['number']
-    issues[issue_no]['title'] = dct['title']
-    issues[issue_no]['state'] = dct['state']
+    issues[repo][issue_no]['title'] = dct['title']
+    issues[repo][issue_no]['state'] = dct['state']
     try:
-        issues[issue_no]['assignee'] = dct['assignee']['login']
+        issues[repo][issue_no]['assignee'] = dct['assignee']['login']
     except TypeError:
-        issues[issue_no]['assignee'] = "no one"
-    issues[issue_no]['comments'] = dct['comments']
-    issues[issue_no]['updated_at'] = tstamp
-    issues[issue_no]['url'] = dct['html_url']
+        issues[repo][issue_no]['assignee'] = "no one"
+    issues[repo][issue_no]['comments'] = dct['comments']
+    issues[repo][issue_no]['updated_at'] = tstamp
+    issues[repo][issue_no]['url'] = dct['html_url']
     return ["New Issue: \'%s\' (#%i, %s), assigned to %s, %i comments. URL: %s" % \
-            (dct['title'], issue_no, dct['state'], issues[issue_no]['assignee'], \
+            (dct['title'], issue_no, dct['state'], issues[repo][issue_no]['assignee'], \
                 dct['comments'], dct['html_url'])]
 
 
-def findIssueDelta(dct):
+def findIssueDelta(dct, repo):
     # Find changes between two versions of an Issue, generating a notification message
     retval = []
     issue_no = dct['number']
-    if issues[issue_no]['title'] != dct['title']:
+    if issues[repo][issue_no]['title'] != dct['title']:
         rv = "Issue #%i updated: now called \'%s\' (was \'%s\')" % \
-            (issue_no, dct['title'], issues[issue_no]['title'])
+            (issue_no, dct['title'], issues[repo][issue_no]['title'])
         retval.append(rv)
-        issues[issue_no]['title'] = dct['title']
-    if issues[issue_no]['state'] != dct['state']:
+        issues[repo][issue_no]['title'] = dct['title']
+    if issues[repo][issue_no]['state'] != dct['state']:
         rv = "Issue #%i updated: Issue is now %s (was %s)" % \
-            (issue_no, dct['state'], issues[issue_no]['state'])
+            (issue_no, dct['state'], issues[repo][issue_no]['state'])
         retval.append(rv)
-        issues[issue_no]['state'] = dct['state']
+        issues[repo][issue_no]['state'] = dct['state']
     try:
-        if issues[issue_no]['assignee'] != dct['assignee']['login']:
+        if issues[repo][issue_no]['assignee'] != dct['assignee']['login']:
             rv = "Issue #%i updated: now assigned to %s (was assigned to %s)" % \
-                (issue_no, dct['assignee']['login'], issues[issue_no]['assignee'])
+                (issue_no, dct['assignee']['login'], issues[repo][issue_no]['assignee'])
             retval.append(rv)
-            issues[issue_no]['assignee'] = dct['assignee']['login']
+            issues[repo][issue_no]['assignee'] = dct['assignee']['login']
     except TypeError:
-        if issues[issue_no]['assignee'] != "no one":
+        if issues[repo][issue_no]['assignee'] != "no one":
             rv = "Issue #%i updated: now assigned to no one (was assigned to %s)" % \
-                (issue_no, issues[issue_no]['assignee'])
+                (issue_no, issues[repo][issue_no]['assignee'])
             retval.append(rv)
-            issues[issue_no]['assignee'] = "no one"
-    if issues[issue_no]['comments'] != dct['comments']:
+            issues[repo][issue_no]['assignee'] = "no one"
+    if issues[repo][issue_no]['comments'] != dct['comments']:
         rv = "Issue #%i updated: Gained %i comments (now at %i)" % \
-            (issue_no, dct['comments'] - issues[issue_no]['comments'], dct['comments'])
-        issues[issue_no]['comments'] = dct['comments']
+            (issue_no, dct['comments'] - issues[repo][issue_no]['comments'], dct['comments'])
+        issues[repo][issue_no]['comments'] = dct['comments']
     if retval != []:
         rv = "URL to Issue #%i: %s" % (issue_no, dct['html_url'])
         retval.append(rv)
-    issues[issue_no]['updated_at'] = parseTime(dct['updated_at'])
+    issues[repo][issue_no]['updated_at'] = parseTime(dct['updated_at'])
     return retval
 
 
-def processApiResult(element):
+def processApiResult(element, repo):
     # Process the API results, creating notification messages
     retval = ""
     new = True
     dct = dict(element)
     issue_no = dct['number']
     try:
-        issues[issue_no]
+        issues[repo][issue_no]
         new = False
     except KeyError:
-        issues[issue_no] = {}
+        issues[repo][issue_no] = {}
     if new:
-        retval = newIssueFound(dct)
+        retval = newIssueFound(dct, repo)
     else:
         tstamp = parseTime(dct['updated_at']) # As UNIX timestamp (epoch)
-        if tstamp > issues[issue_no]['updated_at']: # Issue has updated, act on it
-            retval = findIssueDelta(dct)
+        if tstamp > issues[repo][issue_no]['updated_at']: # Issue has updated, act on it
+            retval = findIssueDelta(dct, repo)
         else: # Issue has not updated, skip it.
             pass
     return retval
 
 
-def Initialize(repo, bot):
+def Initialize(repos, bot):
     # Initialize database with current data
-    _, lst_open = pullApi(repo)
-    rlimit, lst_closed = pullApi(repo, 'closed')
-    updateMeta(rlimit)
-    for element in itertools.chain(lst_open, lst_closed):
-        processApiResult(element)
+    for repo in repos:
+        _, lst_open = pullApi(repo)
+        rlimit, lst_closed = pullApi(repo, 'closed')
+        updateMeta(rlimit)
+        for element in itertools.chain(lst_open, lst_closed):
+            processApiResult(element)
 
 
 def loop(pTuple):
     # Poll API and notify the MUC of any changes.
-    repo, bot = pTuple
-    _, lst_open = pullApi(repo)
-    rlimit, lst_closed = pullApi(repo, 'closed')
-    updateMeta(rlimit)
-    messages = []
-    for element in itertools.chain(lst_open, lst_closed):
-        messages.extend(processApiResult(element))
-    for element in messages:
-        bot.notify(element)
+    repos, bot = pTuple
+    for repo in repos:
+        _, lst_open = pullApi(repo)
+        rlimit, lst_closed = pullApi(repo, 'closed')
+        updateMeta(rlimit)
+        messages = []
+        for element in itertools.chain(lst_open, lst_closed):
+            messages.extend(processApiResult(element, repo))
+        for element in messages:
+            bot.notify("Updates in repository %s:" % (repo))
+            bot.notify(element)
