@@ -160,7 +160,7 @@ def Initialize(repos, bot, oauth):
         issues[repo] = {}
         _, lst_open = pullApi(repo, oauthtoken=oauth)
         rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
-        updateMeta(rlimit)
+        updateMeta(rlimit, bot)
         for element in itertools.chain(lst_open, lst_closed):
             processApiResult(element, repo)
 
