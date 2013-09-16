@@ -37,6 +37,6 @@ bot.setHandlerParent(client)
 
 client.setServiceParent(application)
 
-issuebot.Initialize(repos, bot)
+issuebot.Initialize(repos, bot, oauth)
 lc = LoopingCall(issuebot.loop, (repos, bot, oauth))
 lc.start(60)
