@@ -49,6 +49,7 @@ class IssueBot(XMPPHandler):
 
 
 def pullApi(repo, state='open'):
+    # Poll the API and return the JSON-Data and the X-RateLimit-Remaining.
     url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
     response = urllib2.urlopen(url)
     if response.info().getheader('Status') == '200 OK':
@@ -58,17 +59,20 @@ def pullApi(repo, state='open'):
 
 
 def updateMeta(rlimit):
+    # Update the remaining Ratelimit information, warn if we approach zero.
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
         print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
 
 
 def parseTime(timestring):
+    # Convert GitHub-API timestring to UNIX epoch
     tobj = time.strptime(timestring, "%Y-%m-%dT%H:%M:%SZ")
     return time.strftime("%s", tobj)
 
 
 def newIssueFound(dct):
+    # Add a new issue to the database and generate a notification
     tstamp = parseTime(dct['updated_at']) # As UNIX timestamp (epoch)
     issue_no = dct['number']
     issues[issue_no]['title'] = dct['title']
@@ -86,6 +90,7 @@ def newIssueFound(dct):
 
 
 def findIssueDelta(dct):
+    # Find changes between two versions of an Issue, generating a notification message
     retval = []
     issue_no = dct['number']
     if issues[issue_no]['title'] != dct['title']:
@@ -122,6 +127,7 @@ def findIssueDelta(dct):
 
 
 def processApiResult(element):
+    # Process the API results, creating notification messages
     retval = ""
     new = True
     dct = dict(element)
@@ -152,6 +158,7 @@ def Initialize(repo, bot):
 
 
 def loop(pTuple):
+    # Poll API and notify the MUC of any changes.
     repo, bot = pTuple
     _, lst_open = pullApi(repo)
     rlimit, lst_closed = pullApi(repo, 'closed')
