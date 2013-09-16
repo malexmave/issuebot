@@ -67,7 +67,6 @@ def updateMeta(rlimit, bot):
     meta['RateLimitRemaining'] = rlimit
     if rlimit <= 5:
         print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
-    bot.notify("Rate Limit remaining: %s" % (rlimit))
 
 
 
