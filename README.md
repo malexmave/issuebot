@@ -29,9 +29,7 @@ in addition to the normal Twisted package.
 
 ## Usage
 
-Copy `issuebot.tac.example` to `issuebot.tac` changing the jabber_id,
-password, room, repos (you can enter more than one repository, please
-format them as a python list), and bot_name to something appropriate. 
+Copy `issuebot.tac.example` to `issuebot.tac` changing the configuration parameters at the top to something appropriate. 
 Then launch it with `twistd`.
 
     twistd -y issuebot.tac

@@ -22,13 +22,17 @@ room_pass = None
 # Repository, in format ['username/repo', 'username/repo2', ...]
 # If you need only one repository, please format it as a [list] anyway.
 repos     = ['octocat/Spoon-Knife', 'octocat/Hello-World']
+# Now, please provide the update frequency in seconds.
+# Please keep in mind that, if you are not using OAuth, you have a fixed limit
+# of 60 requests per Hour, and the program uses two requests for each repo on
+# each refresh cycle.
+freq      = 300 # 5 Minutes
 # You may optionally specify an OAuth-Token, if you know what you are doing.
 # If you don't want to, leave it set to None
 oauth     = None
 # -- That's it, you're all set.
 
 application = service.Application('issuebot')
-
 
 client = XMPPClient(jid.internJID(jabber_id), password)
 
@@ -39,4 +43,4 @@ client.setServiceParent(application)
 
 issuebot.Initialize(repos, bot, oauth)
 lc = LoopingCall(issuebot.loop, (repos, bot, oauth))
-lc.start(60)
+lc.start(freq)
