@@ -2,7 +2,7 @@ issuebot
 ========
 
 Issuebot is an XMPP bot that notifies multi-user chat rooms (MUCs) of
-changes to Issues on a GitHub-Project
+changes to Issues on a GitHub-Project.
 
 It uses the [GitHub API](http://developer.github.com) to get issue details 
 for the repositories it monitors.
