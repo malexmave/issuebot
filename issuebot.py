@@ -5,9 +5,10 @@ import itertools
 from wokkel.subprotocols import XMPPHandler
 from wokkel.xmppim import AvailablePresence, Presence
 from twisted.words.xish import domish
+from twisted.internet import reactor
 
 issues = {}
-meta = {'RateLimitRemaining' : 60}
+meta = {'RateLimitRemaining' : 60, 'ExceptionCount' : 0}
 NS_MUC = 'http://jabber.org/protocol/muc'
 NS_XHTML_IM = 'http://jabber.org/protocols/xhtml-im'
 NS_XHTML_W3C = 'http://www.w3.org/1999/xhtml'
@@ -165,16 +166,28 @@ def Initialize(repos, bot, oauth):
 
 
 def loop(pTuple):
-    # Poll API and notify the MUC of any changes.
-    repos, bot, oauth = pTuple
-    for repo in repos:
-        _, lst_open = pullApi(repo, oauthtoken=oauth)
-        rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
-        updateMeta(rlimit)
-        messages = []
-        for element in itertools.chain(lst_open, lst_closed):
-            messages.extend(processApiResult(element, repo))
-        if messages != []:
-            bot.notify("Updates in repository %s:" % (repo))
-        for element in messages:
-            bot.notify(element)
+    try:
+        # Poll API and notify the MUC of any changes.
+        repos, bot, oauth = pTuple
+        for repo in repos:
+            _, lst_open = pullApi(repo, oauthtoken=oauth)
+            rlimit, lst_closed = pullApi(repo, oauthtoken=oauth, state='closed')
+            updateMeta(rlimit)
+            messages = []
+            for element in itertools.chain(lst_open, lst_closed):
+                messages.extend(processApiResult(element, repo))
+            if messages != []:
+                bot.notify("Updates in repository %s:" % (repo))
+            for element in messages:
+                bot.notify(element)
+            meta['ExceptionCount'] = 0
+    except Exception as e:
+        meta['ExceptionCount'] += 1
+        if meta['ExceptionCount'] < 5:
+            bot.notify("An Exception occured during the run. Retrying on next cycle for %i more times." % (5 - meta['ExceptionCount']))
+            bot.notify("Details: " + str(e))
+        else:
+            bot.notify('An Exception occured during the run. Five consecutive Exceptions have been reached, stopping execution. Goodbye.')
+            bot.notify("Details: " + str(e))
+            reactor.stop()
+
