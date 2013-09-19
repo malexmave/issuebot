@@ -42,10 +42,5 @@ bot.setHandlerParent(client)
 client.setServiceParent(application)
 
 issuebot.Initialize(repos, bot, oauth)
-while True:
-    try:
-        lc = LoopingCall(issuebot.loop, (repos, bot, oauth))
-        lc.start(freq)
-    except:
-        # Try this. Notify the bot, if it works.
-        pass
+lc = LoopingCall(issuebot.loop, (repos, bot, oauth))
+lc.start(freq)
