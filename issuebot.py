@@ -90,9 +90,9 @@ def newIssueFound(dct, repo):
     issues[repo][issue_no]['comments'] = dct['comments']
     issues[repo][issue_no]['updated_at'] = tstamp
     issues[repo][issue_no]['url'] = dct['html_url']
-    return ["New Issue: \'%s\' (#%i, %s), assigned to %s, %i comments. URL: %s" % \
-            (dct['title'], issue_no, dct['state'], issues[repo][issue_no]['assignee'], \
-                dct['comments'], dct['html_url'])]
+    return ["New Issue: \'%s\' (#%i, %s), created by %s, assigned to %s, %i comments. URL: %s" % \
+            (dct['title'], issue_no, dct['state'], dct['user']['login'], \
+                issues[repo][issue_no]['assignee'], dct['comments'], dct['html_url'])]
 
 
 def findIssueDelta(dct, repo):
