@@ -51,7 +51,7 @@ class IssueBot(XMPPHandler):
 
 def pullApi(repo, oauthtoken=None, state='open'):
     # Poll the API and return the JSON-Data and the X-RateLimit-Remaining.
-    url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state
+    url = 'https://api.github.com/repos/' + repo + '/issues?state=' + state + "&sort=updated"
     headers = {"User-agent" : "malexmave/Issuebot"}
     if oauthtoken:
         headers["Authorization"] = "token " + oauthtoken
