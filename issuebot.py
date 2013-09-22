@@ -132,6 +132,7 @@ def findIssueDelta(dct, repo):
         log.msg("Comments changed. Processing")
         rv = "Issue #%i updated: Gained %i comments (now at %i)" % \
             (issue_no, dct['comments'] - issues[repo][issue_no]['comments'], dct['comments'])
+        retval.append(rv)
         issues[repo][issue_no]['comments'] = dct['comments']
     if retval != []:
         rv = "URL to Issue #%i: %s" % (issue_no, dct['html_url'])
