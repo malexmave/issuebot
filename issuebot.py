@@ -6,6 +6,7 @@ from wokkel.subprotocols import XMPPHandler
 from wokkel.xmppim import AvailablePresence, Presence
 from twisted.words.xish import domish
 from twisted.internet import reactor
+from twisted.python import log
 
 issues = {}
 meta = {'RateLimitRemaining' : 60, 'ExceptionCount' : 0}
@@ -79,6 +80,7 @@ def parseTime(timestring):
 
 def newIssueFound(dct, repo):
     # Add a new issue to the database and generate a notification
+    log.msg("New Issue found: %s" % (dct['title']))
     tstamp = parseTime(dct['updated_at']) # As UNIX timestamp (epoch)
     issue_no = dct['number']
     issues[repo][issue_no]['title'] = dct['title']
@@ -97,31 +99,37 @@ def newIssueFound(dct, repo):
 
 def findIssueDelta(dct, repo):
     # Find changes between two versions of an Issue, generating a notification message
+    log.msg("Issue updated. Finding changes to %s" % (dct['title']))
     retval = []
     issue_no = dct['number']
     if issues[repo][issue_no]['title'] != dct['title']:
+        log.msg("Title changed. Processing")
         rv = "Issue #%i updated: now called \'%s\' (was \'%s\')" % \
             (issue_no, dct['title'], issues[repo][issue_no]['title'])
         retval.append(rv)
         issues[repo][issue_no]['title'] = dct['title']
     if issues[repo][issue_no]['state'] != dct['state']:
+        log.msg("State changed. Processing")
         rv = "Issue #%i updated: Issue is now %s (was %s)" % \
             (issue_no, dct['state'], issues[repo][issue_no]['state'])
         retval.append(rv)
         issues[repo][issue_no]['state'] = dct['state']
     try:
         if issues[repo][issue_no]['assignee'] != dct['assignee']['login']:
+            log.msg("Assignee changed. Processing")
             rv = "Issue #%i updated: now assigned to %s (was assigned to %s)" % \
                 (issue_no, dct['assignee']['login'], issues[repo][issue_no]['assignee'])
             retval.append(rv)
             issues[repo][issue_no]['assignee'] = dct['assignee']['login']
     except TypeError:
         if issues[repo][issue_no]['assignee'] != "no one":
+            log.msg("Assignee changed. Processing")
             rv = "Issue #%i updated: now assigned to no one (was assigned to %s)" % \
                 (issue_no, issues[repo][issue_no]['assignee'])
             retval.append(rv)
             issues[repo][issue_no]['assignee'] = "no one"
     if issues[repo][issue_no]['comments'] != dct['comments']:
+        log.msg("Comments changed. Processing")
         rv = "Issue #%i updated: Gained %i comments (now at %i)" % \
             (issue_no, dct['comments'] - issues[repo][issue_no]['comments'], dct['comments'])
         issues[repo][issue_no]['comments'] = dct['comments']
@@ -129,6 +137,7 @@ def findIssueDelta(dct, repo):
         rv = "URL to Issue #%i: %s" % (issue_no, dct['html_url'])
         retval.append(rv)
     issues[repo][issue_no]['updated_at'] = parseTime(dct['updated_at'])
+    log.msg("All relevant changes to issue have been found. Returning.")
     return retval
 
 
