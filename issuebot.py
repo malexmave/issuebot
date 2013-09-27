@@ -193,11 +193,17 @@ def loop(pTuple):
             meta['ExceptionCount'] = 0
     except Exception as e:
         meta['ExceptionCount'] += 1
-        if meta['ExceptionCount'] < 5:
+        if meta['ExceptionCount'] < 5 and meta['ExceptionCount'] > 1:
             bot.notify("An Exception occured during the run. Retrying on next cycle for %i more times." % (5 - meta['ExceptionCount']))
             bot.notify("Details: " + str(e))
+            log.msg('Error occured: ' + str(e))
+        elif meta['ExceptionCount'] == 1:
+            log.msg('Error occured for the first time, staying silent.')
+            log.msg(str(e))
         else:
             bot.notify('An Exception occured during the run. Five consecutive Exceptions have been reached, stopping execution. Goodbye.')
             bot.notify("Details: " + str(e))
+            log.msg('Error occured 5 times in a row, stopping.')
+            log.msg(str(e))
             reactor.stop()
 
