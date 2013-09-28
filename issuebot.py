@@ -71,7 +71,6 @@ def updateMeta(rlimit):
         print "[WARN] Approaching rate limit - %i remaining" % (rlimit)
 
 
-
 def parseTime(timestring):
     # Convert GitHub-API timestring to UNIX epoch
     tobj = time.strptime(timestring, "%Y-%m-%dT%H:%M:%SZ")
@@ -206,4 +205,3 @@ def loop(pTuple):
             log.msg('Error occured 5 times in a row, stopping.')
             log.msg(str(e))
             reactor.stop()
-
