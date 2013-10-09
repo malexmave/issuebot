@@ -44,6 +44,7 @@ to 5000 / hour. Set the token into the respective variable in the tac-file.
 
 Instructions on how to obtain such a token can be found on the 
 [GitHub developer site](https://developer.github.com/guides/getting-started/#authentication)
-(look for the section on OAuth and follow the instructions, pasting the generated 
-token into the variable as a String). This is entirely optional, but please note 
-that GitHub may be angry if you exceed your Rate Limit, and the bot may crash.
+(look for the section on OAuth and follow the instructions, pasting the 
+generated token into the variable as a String). You can also create such a 
+token in your User settings under Applications => Personal Access tokens. This is entirely optional, but please note that GitHub may be angry if you exceed 
+your Rate Limit, and the bot may crash.
