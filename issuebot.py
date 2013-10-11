@@ -208,7 +208,7 @@ def loop(pTuple):
             meta['ExceptionCount'] = 0
     except urllib2.URLError as e:
         if e.code == 502:
-            pass
+            log.msg('Error occured: 502 bad gateway. Ignoring.')
         else:
             incrException(e, bot)
     except Exception as e:
